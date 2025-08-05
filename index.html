@@ -1,12 +1,788 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Mi Página en GitHub Pages</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#273caa">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+
+  <meta charset="UTF-8" />
+  <title>Convertidor de Unidades Químicas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #e6ebf8;
+      --text: #0b1446;
+      --primary: #273caa;
+      --secondary: #4a6bff;
+      --card: #d4dbf7;
+      --result-bg: #b8c1f4;
+      --success: #28a745;
+      --warning: #ffc107;
+    }
+    body.dark {
+      --bg: #121a4a;
+      --text: #c3c9f3;
+      --primary: #5c72e6;
+      --secondary: #7d94ff;
+      --card: #1d265d;
+      --result-bg: #394b9e;
+      --success: #4caf50;
+      --warning: #ff9800;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container {
+      background: var(--bg);
+      max-width: 650px;
+      width: 95%;
+      margin: 30px auto;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(39, 60, 170, 0.3);
+    }
+    h2 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+    img {
+      display: block;
+      margin: 0 auto 15px auto;
+      width: 70px;
+    }
+    label {
+      margin-top: 15px;
+      display: block;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 2px solid var(--primary);
+      font-size: 16px;
+      background-color: white;
+      transition: all 0.3s;
+    }
+    select:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.2);
+    }
+    #resultado {
+      margin-top: 25px;
+      background-color: var(--result-bg);
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 20px;
+      text-align: center;
+      font-weight: bold;
+      position: relative;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #copiarBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    #copiarBtn:hover {
+      background: var(--secondary);
+      transform: scale(1.1);
+    }
+    #historial {
+      margin-top: 25px;
+      font-size: 15px;
+    }
+    #historial h4 {
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+    #historial ul {
+      list-style: none;
+      padding-left: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background: var(--card);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    #historial li {
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: var(--bg);
+      transition: all 0.3s;
+    }
+    #historial li:hover {
+      background: var(--result-bg);
+    }
+    .botones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    button {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background-color: var(--secondary);
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    .acordeon-btn {
+      width: 100%;
+      text-align: left;
+      background-color: var(--primary);
+      color: white;
+      padding: 12px 15px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .acordeon-btn:hover {
+      background-color: var(--secondary);
+    }
+    .acordeon-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+      background-color: var(--card);
+      margin-top: 10px;
+      padding: 0 15px;
+      border-radius: 8px;
+      border: 2px solid var(--primary);
+      font-size: 15px;
+    }
+    .acordeon-panel.open {
+      padding: 15px;
+      max-height: 1000px;
+    }
+    .info-bubble {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      font-size: 14px;
+      line-height: 20px;
+      cursor: help;
+      margin-left: 5px;
+    }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: var(--text);
+      color: var(--bg);
+      text-align: center;
+      border-radius: 6px;
+      padding: 10px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 14px;
+      font-weight: normal;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    .unidad-info {
+      font-size: 14px;
+      color: var(--text);
+      margin-top: 5px;
+      padding: 8px;
+      background: var(--card);
+      border-radius: 6px;
+      display: none;
+    }
+    .alert {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 15px;
+      display: none;
+    }
+    .alert-success {
+      background-color: rgba(40, 167, 69, 0.2);
+      border-left: 4px solid var(--success);
+    }
+    .alert-warning {
+      background-color: rgba(255, 193, 7, 0.2);
+      border-left: 4px solid var(--warning);
+    }
+    .ejemplos {
+      margin-top: 15px;
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px;
+      background: var(--card);
+      border-radius: 8px;
+    }
+    .ejemplos h5 {
+      margin-top: 0;
+      color: var(--primary);
+    }
+    select option {
+      position: relative;
+      padding: 8px 12px;
+    }
+    .unidad-relacion {
+      font-size: 12px;
+      color: #666;
+      margin-left: 5px;
+      font-weight: normal;
+    }
+    .unidad-relacion::before {
+      content: "(";
+    }
+    .unidad-relacion::after {
+      content: ")";
+    }
+    body.dark .unidad-relacion {
+      color: #aaa;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+      button {
+        min-width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>¡Hola, GitHub Pages está funcionando!</h1>
-    <p>Este es un archivo index.html de ejemplo.</p>
+  <div class="container">
+    <img src="445686883_854224553410144_7118261673438766739_n.jpg" alt="Logo Universidad Mayor" />
+    <h2>Convertidor de Unidades Químicas</h2>
+
+    <div class="alert alert-success" id="successAlert">
+      ¡Conversión realizada con éxito! El resultado ha sido copiado al portapapeles.
+    </div>
+
+    <div class="alert alert-warning" id="warningAlert">
+      Por favor, completa todos los campos para realizar la conversión.
+    </div>
+
+    <div class="botones">
+      <button onclick="invertirUnidades()">
+        <span style="font-size: 18px;">🔄</span> Invertir
+      </button>
+      <button onclick="alternarModo()">
+        <span style="font-size: 18px;">🌓</span> Modo Oscuro
+      </button>
+      <button onclick="limpiarCampos()">
+        <span style="font-size: 18px;">🧹</span> Limpiar
+      </button>
+    </div>
+
+    <label>
+      🔧 Magnitud:
+      <span class="tooltip">❓
+        <span class="tooltiptext">Selecciona el tipo de magnitud que deseas convertir</span>
+      </span>
+    </label>
+    <select id="magnitud">
+      <option value="">--Selecciona una magnitud--</option>
+      <option value="masa">Masa</option>
+      <option value="volumen">Volumen</option>
+      <option value="distancia">Distancia</option>
+      <option value="densidad">Densidad</option>
+      <option value="presion">Presión</option>
+      <option value="tiempo">Tiempo</option>
+      <option value="fuerza">Fuerza</option>
+      <option value="energia">Energía</option>
+    </select>
+
+    <div id="unidadOrigenContainer">
+      <label>
+        ⬅️ Unidad de origen:
+        <span class="tooltip">❓
+          <span class="tooltiptext">Selecciona la unidad de medida del valor que ingresarás</span>
+        </span>
+      </label>
+      <select id="unidadOrigen"></select>
+      <div class="unidad-info" id="infoOrigen"></div>
+    </div>
+
+    <div id="unidadDestinoContainer">
+      <label>
+        ➡️ Unidad de destino:
+        <span class="tooltip">❓
+          <span class="tooltiptext">Selecciona la unidad de medida a la que deseas convertir</span>
+        </span>
+      </label>
+      <select id="unidadDestino"></select>
+      <div class="unidad-info" id="infoDestino"></div>
+    </div>
+
+    <label>
+      ✏️ Valor:
+      <span class="tooltip">❓
+        <span class="tooltiptext">Ingresa el valor numérico que deseas convertir</span>
+      </span>
+    </label>
+    <input type="number" id="valor" placeholder="Ejemplo: 100, 3.5, 0.25..." step="any" />
+
+    <div class="ejemplos">
+      <h5>💡 Ejemplos comunes:</h5>
+      <div id="ejemplosDinamicos">Selecciona una magnitud para ver ejemplos de conversión</div>
+    </div>
+
+    <div id="resultado">
+      <span id="textoResultado">Selecciona unidades e ingresa un valor</span>
+      <button id="copiarBtn" onclick="copiarResultado()" title="Copiar resultado">📋</button>
+    </div>
+
+    <div id="historial">
+      <h4>📜 Historial de conversiones:</h4>
+      <ul id="listaHistorial"></ul>
+      <button onclick="limpiarHistorial()" style="margin-top: 10px;">🧹 Limpiar historial</button>
+    </div>
+
+    <button class="acordeon-btn" onclick="toggleGuia()">
+      <span>❓ Cómo usar el convertidor</span>
+      <span id="guiaIcono">➕</span>
+    </button>
+    <div id="guia" class="acordeon-panel">
+      <h4>📘 Guía de Uso – Convertidor de Unidades Químicas</h4>
+      <p>Esta herramienta te ayuda a convertir entre diferentes unidades químicas de manera sencilla. Ideal para estudiantes, profesores y cualquier persona que necesite realizar cálculos químicos básicos.</p>
+      
+      <h5>🔍 Pasos para usar el convertidor:</h5>
+      <ol>
+        <li><strong>Selecciona la Magnitud:</strong> elige el tipo de medida que deseas convertir.</li>
+        <li><strong>Unidad de Origen:</strong> selecciona la unidad en la que está tu valor actual.</li>
+        <li><strong>Unidad de Destino:</strong> selecciona la unidad a la que quieres convertir.</li>
+        <li><strong>Ingresa el Valor:</strong> escribe el número que deseas convertir.</li>
+        <li><strong>Resultado:</strong> la conversión aparecerá automáticamente.</li>
+      </ol>
+      
+      <h5>✨ Funciones adicionales:</h5>
+      <ul>
+        <li><strong>🔄 Invertir:</strong> intercambia las unidades de origen y destino.</li>
+        <li><strong>🌓 Modo Oscuro:</strong> cambia el tema para uso nocturno.</li>
+        <li><strong>📋 Copiar:</strong> guarda el resultado en tu portapapeles.</li>
+        <li><strong>📜 Historial:</strong> revisa tus conversiones recientes.</li>
+        <li><strong>🧹 Limpiar:</strong> borra todos los campos para empezar de nuevo.</li>
+      </ul>
+      
+      <h5>🧪 Unidades disponibles:</h5>
+      <div id="conceptosQuimicos">
+        <p><strong>Masa:</strong> Toneladas (Ton), Kilogramos (Kg), Gramos (g), Miligramos (mg), Microgramos (ug)</p>
+        <p><strong>Volumen:</strong> Galones (Gal), Metros cúbicos (m³), Litros (L), Mililitros (mL), Microlitros (uL)</p>
+        <p><strong>Distancia:</strong> Yardas, Pulgadas, Metros (m), Centímetros (cm), Kilómetros (km), Milímetros (mm)</p>
+        <p><strong>Densidad:</strong> Kg/m³, g/mL, Kg/L, g/L</p>
+        <p><strong>Presión:</strong> mmHg, Atmósferas (Atm), Pascales (Pa), psi, Torr</p>
+        <p><strong>Tiempo:</strong> Segundos (s), Minutos (min), Horas</p>
+        <p><strong>Fuerza:</strong> Newton (N), Kilonewton (kN), Micronewton (uN), Dina, Kilogramo-fuerza (kgf)</p>
+        <p><strong>Energía:</strong> Kilojulios (KJ), Kilocalorías (Kcal)</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const unidades = {
+      masa: {
+        nombre: "Masa",
+        unidades: {
+          Ton: { factor: 1000, nombre: "Tonelada", descripcion: "1 Ton = 1000 kg", relacion: "1 Ton = 1,000,000 g" },
+          Kg: { factor: 1, nombre: "Kilogramo", descripcion: "Unidad base del SI", relacion: "1 Kg = 1000 g" },
+          g: { factor: 0.001, nombre: "Gramo", descripcion: "1 g = 0.001 kg", relacion: "1 g = 1000 mg" },
+          mg: { factor: 0.000001, nombre: "Miligramo", descripcion: "1 mg = 0.000001 kg", relacion: "1 mg = 1000 μg" },
+          ug: { factor: 0.000000001, nombre: "Microgramo", descripcion: "1 μg = 0.000000001 kg", relacion: "1000 μg = 1 mg" }
+        },
+        ejemplos: [
+          "Convertir 500 g a Kg → 0.5 Kg",
+          "Convertir 1 Ton a Kg → 1000 Kg",
+          "Convertir 1000 mg a g → 1 g"
+        ]
+      },
+      volumen: {
+        nombre: "Volumen",
+        unidades: {
+          Gal: { factor: 0.00378541, nombre: "Galón", descripcion: "1 Gal ≈ 3.785 L", relacion: "1 Gal = 3785 mL" },
+          m3: { factor: 1, nombre: "Metro cúbico", descripcion: "Unidad base del SI", relacion: "1 m³ = 1000 L" },
+          L: { factor: 0.001, nombre: "Litro", descripcion: "1 L = 0.001 m³", relacion: "1 L = 1000 mL" },
+          mL: { factor: 0.000001, nombre: "Mililitro", descripcion: "1 mL = 0.001 L", relacion: "1 mL = 1000 μL" },
+          uL: { factor: 0.000000001, nombre: "Microlitro", descripcion: "1 μL = 0.000001 L", relacion: "1000 μL = 1 mL" }
+        },
+        ejemplos: [
+          "Convertir 1 Gal a L → 3.785 L",
+          "Convertir 1000 mL a L → 1 L",
+          "Convertir 1 m³ a Gal → 264.172 Gal"
+        ]
+      },
+      distancia: {
+        nombre: "Distancia",
+        unidades: {
+          yard: { factor: 0.9144, nombre: "Yarda", descripcion: "1 yarda = 0.9144 m", relacion: "1 yarda = 36 pulgadas" },
+          inch: { factor: 0.0254, nombre: "Pulgada", descripcion: "1 pulgada = 0.0254 m", relacion: "12 pulgadas = 1 pie" },
+          m: { factor: 1, nombre: "Metro", descripcion: "Unidad base del SI", relacion: "1 m = 100 cm" },
+          cm: { factor: 0.01, nombre: "Centímetro", descripcion: "1 cm = 0.01 m", relacion: "1 cm = 10 mm" },
+          km: { factor: 1000, nombre: "Kilómetro", descripcion: "1 km = 1000 m", relacion: "1 km = 100,000 cm" },
+          mm: { factor: 0.001, nombre: "Milímetro", descripcion: "1 mm = 0.001 m", relacion: "10 mm = 1 cm" }
+        },
+        ejemplos: [
+          "Convertir 1 yarda a m → 0.9144 m",
+          "Convertir 12 pulgadas a cm → 30.48 cm",
+          "Convertir 100 cm a m → 1 m"
+        ]
+      },
+      densidad: {
+        nombre: "Densidad",
+        unidades: {
+          'Kg/m3': { factor: 1, nombre: "Kg/m³", descripcion: "Unidad base del SI", relacion: "1 Kg/m³ = 0.001 g/mL" },
+          'g/mL': { factor: 1000, nombre: "g/mL", descripcion: "1 g/mL = 1000 kg/m³", relacion: "1 g/mL = 1 Kg/L" },
+          'Kg/L': { factor: 1000, nombre: "Kg/L", descripcion: "1 Kg/L = 1000 kg/m³", relacion: "1 Kg/L = 1 g/mL" },
+          'g/L': { factor: 1, nombre: "g/L", descripcion: "1 g/L = 1 kg/m³", relacion: "1000 g/L = 1 g/mL" }
+        },
+        ejemplos: [
+          "Convertir 1 g/mL a Kg/m³ → 1000 Kg/m³",
+          "Convertir 1000 Kg/m³ a g/mL → 1 g/mL",
+          "Densidad del agua: 1 g/mL = 1000 Kg/m³"
+        ]
+      },
+      presion: {
+        nombre: "Presión",
+        unidades: {
+          mmHg: { factor: 133.322, nombre: "mmHg", descripcion: "Milímetros de mercurio", relacion: "760 mmHg = 1 Atm" },
+          Atm: { factor: 101325, nombre: "Atmósfera", descripcion: "Presión atmosférica estándar", relacion: "1 Atm = 101.325 kPa" },
+          Pa: { factor: 1, nombre: "Pascal", descripcion: "Unidad base del SI", relacion: "1000 Pa = 1 kPa" },
+          psi: { factor: 6894.76, nombre: "psi", descripcion: "Libra por pulgada cuadrada", relacion: "1 psi ≈ 6.895 kPa" },
+          Torr: { factor: 133.322, nombre: "Torr", descripcion: "1 Torr ≈ 1 mmHg", relacion: "760 Torr = 1 Atm" }
+        },
+        ejemplos: [
+          "Convertir 1 Atm a mmHg → 760 mmHg",
+          "Convertir 1 psi a kPa → 6.895 kPa",
+          "Presión arterial normal: 120/80 mmHg"
+        ]
+      },
+      tiempo: {
+        nombre: "Tiempo",
+        unidades: {
+          s: { factor: 1, nombre: "Segundo", descripcion: "Unidad base del SI", relacion: "60 s = 1 min" },
+          min: { factor: 60, nombre: "Minuto", descripcion: "1 min = 60 s", relacion: "60 min = 1 hora" },
+          hora: { factor: 3600, nombre: "Hora", descripcion: "1 hora = 3600 s", relacion: "1 hora = 60 min" }
+        },
+        ejemplos: [
+          "Convertir 1 hora a min → 60 min",
+          "Convertir 30 min a s → 1800 s",
+          "Convertir 3600 s a hora → 1 hora"
+        ]
+      },
+      fuerza: {
+        nombre: "Fuerza",
+        unidades: {
+          N: { factor: 1, nombre: "Newton", descripcion: "Unidad base del SI", relacion: "1000 N = 1 kN" },
+          kN: { factor: 1000, nombre: "Kilonewton", descripcion: "1 kN = 1000 N", relacion: "1 kN ≈ 224.8 lbf" },
+          uN: { factor: 0.000001, nombre: "Micronewton", descripcion: "1 μN = 0.000001 N", relacion: "1,000,000 μN = 1 N" },
+          dina: { factor: 0.00001, nombre: "Dina", descripcion: "1 dina = 0.00001 N", relacion: "100,000 dinas = 1 N" },
+          kgf: { factor: 9.80665, nombre: "Kilogramo-fuerza", descripcion: "1 kgf ≈ 9.81 N", relacion: "1 kgf ≈ 2.2 lbf" }
+        },
+        ejemplos: [
+          "Convertir 1 kgf a N → 9.81 N",
+          "Convertir 1000 N a kN → 1 kN",
+          "Convertir 1 N a dinas → 100000 dinas"
+        ]
+      },
+      energia: {
+        nombre: "Energía",
+        unidades: {
+          KJ: { factor: 1, nombre: "Kilojulio", descripcion: "1 KJ = 1000 J", relacion: "4.184 KJ ≈ 1 Kcal" },
+          Kcal: { factor: 4.184, nombre: "Kilocaloría", descripcion: "1 Kcal ≈ 4.184 KJ", relacion: "1 Kcal = 1000 cal" }
+        },
+        ejemplos: [
+          "Convertir 1 Kcal a KJ → 4.184 KJ",
+          "Convertir 100 KJ a Kcal → 23.9 Kcal",
+          "Valor energético de alimentos se mide en Kcal"
+        ]
+      }
+    };
+
+    // Elementos del DOM
+    const magnitudSelect = document.getElementById("magnitud");
+    const unidadOrigenSelect = document.getElementById("unidadOrigen");
+    const unidadDestinoSelect = document.getElementById("unidadDestino");
+    const valorInput = document.getElementById("valor");
+    const resultadoDiv = document.getElementById("resultado");
+    const textoResultado = document.getElementById("textoResultado");
+    const listaHistorial = document.getElementById("listaHistorial");
+    const infoOrigen = document.getElementById("infoOrigen");
+    const infoDestino = document.getElementById("infoDestino");
+    const ejemplosDinamicos = document.getElementById("ejemplosDinamicos");
+    const successAlert = document.getElementById("successAlert");
+    const warningAlert = document.getElementById("warningAlert");
+    const guiaIcono = document.getElementById("guiaIcono");
+
+    // Llenar unidades cuando se selecciona una magnitud
+    function llenarUnidades() {
+      const mag = magnitudSelect.value;
+      if (!mag || !unidades[mag]) {
+        unidadOrigenSelect.innerHTML = '<option value="">--Selecciona una magnitud primero--</option>';
+        unidadDestinoSelect.innerHTML = '<option value="">--Selecciona una magnitud primero--</option>';
+        infoOrigen.style.display = 'none';
+        infoDestino.style.display = 'none';
+        ejemplosDinamicos.innerHTML = 'Selecciona una magnitud para ver ejemplos de conversión';
+        return;
+      }
+      
+      // Crear opciones para las unidades con relaciones
+      const opciones = Object.keys(unidades[mag].unidades)
+        .map(u => {
+          const unidad = unidades[mag].unidades[u];
+          return `<option value="${u}">${unidad.nombre} (${u})${unidad.relacion ? '<span class="unidad-relacion">' + unidad.relacion + '</span>' : ''}</option>`;
+        })
+        .join('');
+      
+      unidadOrigenSelect.innerHTML = opciones;
+      unidadDestinoSelect.innerHTML = opciones;
+      
+      // Mostrar ejemplos
+      ejemplosDinamicos.innerHTML = unidades[mag].ejemplos
+        .map(ej => `<div>• ${ej}</div>`)
+        .join('');
+      
+      // Actualizar información de unidades
+      actualizarInfoUnidades();
+    }
+
+    // Convertir unidades
+    function convertir() {
+      const mag = magnitudSelect.value;
+      const uO = unidadOrigenSelect.value;
+      const uD = unidadDestinoSelect.value;
+      const val = parseFloat(valorInput.value);
+      
+      // Validación
+      if (!mag || !uO || !uD || isNaN(val)) {
+        if (!mag) {
+          textoResultado.textContent = 'Selecciona una magnitud para comenzar';
+        } else if (!uO || !uD) {
+          textoResultado.textContent = 'Selecciona unidades de origen y destino';
+        } else if (isNaN(val)) {
+          textoResultado.textContent = 'Ingresa un valor numérico';
+        }
+        return;
+      }
+      
+      const base = unidades[mag].unidades;
+      const valBase = val * base[uO].factor;
+      const valConv = valBase / base[uD].factor;
+      
+      mostrarResultado(val, uO, valConv, uD);
+    }
+
+    // Mostrar resultado
+    function mostrarResultado(valor, unidadO, resultado, unidadD) {
+      let texto;
+      let resultadoRedondeado = parseFloat(resultado.toFixed(6)); // Redondear a 6 decimales
+      
+      // Formatear números muy grandes o muy pequeños
+      if (Math.abs(resultadoRedondeado) >= 1e6 || Math.abs(resultadoRedondeado) <= 1e-6) {
+        resultadoRedondeado = resultado.toExponential(4);
+      }
+      
+      texto = `${valor} ${unidadO} = ${resultadoRedondeado} ${unidadD}`;
+      
+      textoResultado.textContent = texto;
+      
+      // Agregar al historial
+      const item = document.createElement("li");
+      item.textContent = texto;
+      listaHistorial.prepend(item);
+      
+      // Limitar historial a 10 elementos
+      if (listaHistorial.children.length > 10) {
+        listaHistorial.removeChild(listaHistorial.lastChild);
+      }
+    }
+
+    // Alternar modo oscuro/claro
+    function alternarModo() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('modoOscuro', document.body.classList.contains('dark'));
+    }
+
+    // Invertir unidades
+    function invertirUnidades() {
+      const temp = unidadOrigenSelect.value;
+      unidadOrigenSelect.value = unidadDestinoSelect.value;
+      unidadDestinoSelect.value = temp;
+      actualizarInfoUnidades();
+      convertir();
+    }
+
+    // Copiar resultado al portapapeles
+    function copiarResultado() {
+      if (!textoResultado.textContent || textoResultado.textContent.includes("Selecciona")) {
+        mostrarAlerta('warning', 'No hay resultado para copiar');
+        return;
+      }
+      
+      navigator.clipboard.writeText(textoResultado.textContent)
+        .then(() => {
+          mostrarAlerta('success', '¡Resultado copiado al portapapeles!');
+        })
+        .catch(err => {
+          console.error('Error al copiar: ', err);
+          mostrarAlerta('warning', 'No se pudo copiar el resultado');
+        });
+    }
+
+    // Mostrar alerta
+    function mostrarAlerta(tipo, mensaje) {
+      const alerta = tipo === 'success' ? successAlert : warningAlert;
+      alerta.textContent = mensaje;
+      alerta.style.display = 'block';
+      
+      setTimeout(() => {
+        alerta.style.display = 'none';
+      }, 3000);
+    }
+
+    // Limpiar campos
+    function limpiarCampos() {
+      valorInput.value = '';
+      textoResultado.textContent = 'Selecciona unidades e ingresa un valor';
+      mostrarAlerta('success', 'Campos limpiados');
+    }
+
+    // Limpiar historial
+    function limpiarHistorial() {
+      listaHistorial.innerHTML = '';
+      mostrarAlerta('success', 'Historial limpiado');
+    }
+
+    // Actualizar información de las unidades seleccionadas
+    function actualizarInfoUnidades() {
+      const mag = magnitudSelect.value;
+      const uO = unidadOrigenSelect.value;
+      const uD = unidadDestinoSelect.value;
+      
+      if (mag && uO && unidades[mag] && unidades[mag].unidades[uO]) {
+        infoOrigen.innerHTML = `<strong>${unidades[mag].unidades[uO].nombre}:</strong> ${unidades[mag].unidades[uO].descripcion}`;
+        infoOrigen.style.display = 'block';
+      } else {
+        infoOrigen.style.display = 'none';
+      }
+      
+      if (mag && uD && unidades[mag] && unidades[mag].unidades[uD]) {
+        infoDestino.innerHTML = `<strong>${unidades[mag].unidades[uD].nombre}:</strong> ${unidades[mag].unidades[uD].descripcion}`;
+        infoDestino.style.display = 'block';
+      } else {
+        infoDestino.style.display = 'none';
+      }
+    }
+
+    // Alternar guía de uso
+    function toggleGuia() {
+      const panel = document.getElementById("guia");
+      panel.classList.toggle("open");
+      const estaAbierta = panel.classList.contains("open");
+      guiaIcono.textContent = estaAbierta ? '➖' : '➕';
+      localStorage.setItem("guiaAbierta", estaAbierta ? "true" : "false");
+    }
+
+    // Cargar configuración al iniciar
+    window.addEventListener("DOMContentLoaded", () => {
+      // Cargar modo oscuro
+      if (localStorage.getItem('modoOscuro') === 'true') {
+        document.body.classList.add('dark');
+      }
+      
+      // Cargar estado de la guía
+      const panel = document.getElementById("guia");
+      if (localStorage.getItem("guiaAbierta") === "true") {
+        panel.classList.add("open");
+        guiaIcono.textContent = '➖';
+      }
+      
+      // Inicializar unidades
+      llenarUnidades();
+      
+      // Event listeners
+      magnitudSelect.addEventListener('change', () => {
+        llenarUnidades();
+        convertir();
+      });
+      
+      unidadOrigenSelect.addEventListener('change', () => {
+        actualizarInfoUnidades();
+        convertir();
+      });
+      
+      unidadDestinoSelect.addEventListener('change', () => {
+        actualizarInfoUnidades();
+        convertir();
+      });
+      
+      valorInput.addEventListener('input', convertir);
+    });
+  </script>
 </body>
 </html>
